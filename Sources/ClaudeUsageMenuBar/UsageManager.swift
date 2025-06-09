@@ -103,30 +103,14 @@ class UsageManager: ObservableObject {
     }
     
     private func startPeriodicRefresh() {
-        // Default to 60 seconds, but can be changed via settings
-        let refreshInterval: TimeInterval = UserDefaults.standard.double(forKey: "refreshInterval") > 0 
-            ? UserDefaults.standard.double(forKey: "refreshInterval") 
-            : 60.0
+        // Fixed 60 seconds refresh interval
+        let refreshInterval: TimeInterval = 60.0
         
         refreshTimer = Timer.scheduledTimer(withTimeInterval: refreshInterval, repeats: true) { _ in
             Task { @MainActor in
                 await self.refreshUsage()
             }
         }
-    }
-    
-    func updateRefreshInterval(_ interval: TimeInterval) {
-        UserDefaults.standard.set(interval, forKey: "refreshInterval")
-        
-        // Restart timer with new interval
-        refreshTimer?.invalidate()
-        startPeriodicRefresh()
-    }
-    
-    func clearCacheAndRefresh() async {
-        cacheManager.clearCache()
-        isLoading = true
-        await refreshUsage()
     }
     
     private func loadUsageDataOptimized() async throws -> UsageStats {

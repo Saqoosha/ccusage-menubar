@@ -14,11 +14,5 @@ struct ClaudeUsageApp: App {
                 .environmentObject(usageManager)
         }
         .menuBarExtraStyle(.window)
-        
-        // Settings window (optional)
-        Settings {
-            SettingsView()
-                .environmentObject(usageManager)
-        }
     }
 }
