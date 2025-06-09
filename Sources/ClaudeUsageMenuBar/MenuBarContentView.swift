@@ -1,78 +1,15 @@
 import SwiftUI
 
-class SettingsWindowManager: ObservableObject {
-    @Published var isSettingsOpen = false
-    private var settingsWindow: NSWindow?
-    
-    func openSettings(usageManager: UsageManager) {
-        if let existingWindow = settingsWindow {
-            existingWindow.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-            return
-        }
-        
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        window.title = "Claude Code Usage Settings"
-        window.center()
-        
-        // Make the window behave like a normal app window
-        window.level = .normal
-        window.isReleasedWhenClosed = false
-        window.hidesOnDeactivate = false
-        
-        window.contentView = NSHostingView(
-            rootView: SettingsView()
-                .environmentObject(usageManager)
-        )
-        
-        settingsWindow = window
-        isSettingsOpen = true
-        
-        // Handle window closing - return to accessory mode when window closes
-        NotificationCenter.default.addObserver(
-            forName: NSWindow.willCloseNotification,
-            object: window,
-            queue: .main
-        ) { [weak self] _ in
-            self?.settingsWindow = nil
-            self?.isSettingsOpen = false
-            // Return to accessory mode when settings window closes
-            NSApp.setActivationPolicy(.accessory)
-        }
-        
-        // Activate the app first and keep it in regular mode
-        NSApp.setActivationPolicy(.regular)
-        NSApp.activate(ignoringOtherApps: true)
-        
-        // Show the window
-        window.orderFrontRegardless()
-        window.makeKeyAndOrderFront(nil)
-        
-        // Force the window to become active with delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            window.orderFrontRegardless()
-            window.makeKey()
-            window.makeMain()
-        }
-    }
-}
-
 struct MenuBarContentView: View {
     @EnvironmentObject var usageManager: UsageManager
     @State private var isRefreshing = false
-    @StateObject private var settingsManager = SettingsWindowManager()
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Today's usage - modern card style
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Image(systemName: "calendar.day.timeline.left")
+                    Image(systemName: "sun.max.fill")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.accentColor)
                     Text("Today")
@@ -178,24 +115,12 @@ struct MenuBarContentView: View {
                 
                 Spacer()
                 
-                HStack(spacing: 12) {
-                    Button {
-                        openSettings()
-                    } label: {
-                        Image(systemName: "gear")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                    .help("Preferences")
-                    
-                    Button("Quit") {
-                        NSApplication.shared.terminate(nil)
-                    }
-                    .font(.system(size: 11, weight: .medium))
-                    .buttonStyle(.plain)
-                    .foregroundColor(.secondary)
+                Button("Quit") {
+                    NSApplication.shared.terminate(nil)
                 }
+                .font(.system(size: 11, weight: .medium))
+                .buttonStyle(.plain)
+                .foregroundColor(.secondary)
             }
         }
         .padding(16)
@@ -234,9 +159,5 @@ struct MenuBarContentView: View {
                 isRefreshing = false
             }
         }
-    }
-    
-    private func openSettings() {
-        settingsManager.openSettings(usageManager: usageManager)
     }
 }
