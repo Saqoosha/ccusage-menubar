@@ -1,5 +1,6 @@
 # Build artifacts
 .build/
+build/
 *.app/
 *.dSYM/
 .DS_Store
