@@ -1,4 +1,4 @@
-# Claude Usage MenuBar
+# Claude Code Usage MenuBar
 
 A lightning-fast native Swift macOS menubar application that displays [Claude Code](https://claude.ai/code) usage statistics in real-time.
 
