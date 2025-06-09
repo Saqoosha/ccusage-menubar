@@ -1,0 +1,37 @@
+# Xcode
+*.xcodeproj
+*.xcworkspace
+.build/
+DerivedData/
+
+# Swift Package Manager
+Package.resolved
+.swiftpm/
+
+# Build outputs
+*.dSYM.zip
+*.dSYM
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Local test files
+test_output.txt
