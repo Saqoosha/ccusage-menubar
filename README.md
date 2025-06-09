@@ -1,10 +1,19 @@
 # Claude Usage MenuBar
 
-A lightning-fast native Swift macOS menubar application that displays Claude Code usage statistics in real-time.
+A lightning-fast native Swift macOS menubar application that displays [Claude Code](https://claude.ai/code) usage statistics in real-time.
+
+## 💡 What is this?
+
+This app monitors your Claude Code usage by reading local data files and displaying:
+- **Daily/Monthly costs** - How much you've spent on Claude Code
+- **Token usage** - Input/output tokens with cache statistics  
+- **Real-time updates** - Live monitoring in your macOS menu bar
+
+Perfect for tracking your Claude Code usage and managing costs efficiently!
 
 ## ✨ Features
 
-- **🚀 Ultra-fast performance**: 0.57s loading (25x faster than original)
+- **🚀 Ultra-fast performance**: 0.57s loading (was 15+ seconds before optimization)
 - **⚡ Smart caching**: Two-level cache system for instant updates
 - **💰 Real-time monitoring**: Tracks Claude Code usage from local data files
 - **🎯 Minimal footprint**: Native Swift app with tiny memory usage (~25MB)
@@ -30,20 +39,14 @@ swift build -c release
 
 For detailed build instructions, see [docs/BUILD.md](docs/BUILD.md).
 
-## 📊 Performance
+## ⚡ Why So Fast?
 
-**🚀 Ultra-Fast Loading:**
-- Initial load: 0.57s (25x faster than original 15s)
-- Cached loads: 0.002s (7,500x improvement!)
-- Processes 200+ files (198MB) efficiently
-- 99.5% cache hit rate after first run
+- **Native Swift**: Built specifically for macOS, not a web app
+- **Smart Caching**: Remembers previous data so it doesn't re-read everything
+- **Parallel Processing**: Uses all your CPU cores simultaneously
+- **Efficient File Reading**: Only processes new or changed files
 
-**🎯 Key Optimizations:**
-- **Parallel Processing**: Uses all CPU cores for file processing
-- **Two-Level Caching**: Memory (NSCache) + Disk cache for instant access
-- **Smart File Filtering**: Skips old files, processes only recent data
-- **Optimized Parsing**: Batch processing with autoreleasepool
-- **24h Pricing Cache**: Automatic LiteLLM pricing updates
+Result: Loads in under 1 second, even with months of usage history!
 
 ## 📁 Project Structure
 
@@ -70,31 +73,31 @@ ccusage-menubar/
 └── artifacts/                   # Generated files and build outputs
 ```
 
-## 🔧 Development
+## 💻 Requirements
 
-**Requirements:**
-- macOS 13.0+ (for MenuBarExtra API)
-- Swift 5.9+ or Xcode 15.0+
-- Git (for cloning)
-
-**Architecture:**
-- Native SwiftUI with MenuBarExtra scene
-- High-performance parallel data processing
-- Two-level caching system (memory + disk)
-- LiteLLM pricing integration with auto-refresh
-- Async/await throughout for responsive UI
+- macOS 13.0 (Ventura) or later
+- Claude Code installed and used (creates local usage logs)
 
 ## 📖 Documentation
 
-- [Build Guide](docs/BUILD.md) - Complete build and installation instructions
-- [Performance Results](docs/OPTIMIZATION_RESULTS.md) - Detailed performance achievements
-- [Future Improvements](docs/FUTURE_IMPROVEMENTS.md) - Planned enhancements
-- [Claude Configuration](CLAUDE.md) - Claude Code integration details
+- [Build Guide](docs/BUILD.md) - How to build and install the app
+- [Claude Configuration](CLAUDE.md) - Technical details for developers
 
-## 🎯 Goals Achieved
+## 🎯 Why This App?
 
-1. ✅ **Ultra-fast Performance** - 25x speed improvement over original
-2. ✅ **Native Swift Implementation** - Lightweight, responsive experience  
-3. ✅ **Accurate Cost Calculation** - Matches ccusage CLI exactly
+Claude Code doesn't provide a built-in usage monitor, making it hard to track costs and usage patterns. This app solves that by:
+
+1. ✅ **Ultra-fast Performance** - Loads usage data in under 1 second
+2. ✅ **Native Swift Implementation** - Lightweight, responsive macOS experience  
+3. ✅ **Accurate Cost Calculation** - Uses real LiteLLM pricing data
 4. ✅ **Real-time Updates** - Shows current usage in menubar instantly
 5. ✅ **Advanced Caching** - Smart two-level cache for maximum performance
+
+## 🔍 How it Works
+
+The app reads Claude Code's local usage logs stored in `~/.claude/projects/` and processes them to show:
+- Token counts (input/output/cache)
+- Daily and monthly cost calculations
+- Usage patterns and trends
+
+All processing happens locally - no data is sent anywhere!
