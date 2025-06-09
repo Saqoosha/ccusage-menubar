@@ -111,6 +111,26 @@ ClaudeUsageMenuBar/
 - Shows "--" when data unavailable
 - Continues operation even with partial data failures
 
+## Performance Status (Critical)
+
+**Current Performance Issues:**
+- Swift CLI: ~12-15 seconds (unacceptable)
+- ccusage: ~2 seconds (target)
+- Swift MenuBar: ~15+ seconds initial load
+
+**Known Bottlenecks:**
+1. Sequential file processing (no parallelization)
+2. Full file loading into memory before parsing
+3. JSONSerialization instead of streaming JSON parser
+4. Redundant date formatting for every entry
+5. No caching of parsed data
+6. LiteLLM pricing fetch adds 1-2 seconds
+
+**Target Performance:**
+- Initial load: < 2 seconds (match ccusage)
+- Subsequent refreshes: < 1 second
+- Must handle 30,000+ JSONL files efficiently
+
 ## Testing Strategy
 
 - Unit tests for UsageManager data parsing

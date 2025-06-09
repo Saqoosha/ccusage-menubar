@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import os
 import subprocess
 import sys
 import time
@@ -46,8 +47,12 @@ def run_ccusage_json():
 def run_swift_cli_json():
     """Run Swift CLI with JSON output and extract 2025-06-09 data"""
     try:
-        result = subprocess.run(['swift', 'simple_output.swift', '--json'], 
-                              capture_output=True, text=True, timeout=30)
+        # Change to parent directory to run swift-cli/simple_output.swift
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(script_dir)
+        
+        result = subprocess.run(['swift', 'swift-cli/simple_output.swift', '--json'], 
+                              capture_output=True, text=True, timeout=30, cwd=parent_dir)
         if result.returncode != 0:
             print(f"Swift CLI failed: {result.stderr}", file=sys.stderr)
             return None
