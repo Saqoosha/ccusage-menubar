@@ -120,6 +120,7 @@ struct MenuBarContentView: View {
                 }
                 .font(.system(size: 11, weight: .medium))
                 .buttonStyle(.plain)
+                .focusable(false)
                 .foregroundColor(.secondary)
             }
         }
