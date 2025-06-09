@@ -366,11 +366,7 @@ class UsageManager: ObservableObject {
     
     private func processFilesInParallel(_ files: [String], modelPricing: [String: ModelPricing]) async -> [UltraCachedEntry] {
         return await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                guard let self = self else {
-                    continuation.resume(returning: [])
-                    return
-                }
+            DispatchQueue.global(qos: .userInitiated).async {
                 
                 let parallelStart = Date()
                 var allEntries: [UltraCachedEntry] = []
@@ -383,7 +379,7 @@ class UsageManager: ObservableObject {
                 let batchSize = max(1, files.count / (ProcessInfo.processInfo.activeProcessorCount * 2))
                 print("   Using \(ProcessInfo.processInfo.activeProcessorCount) CPU cores")
                 
-                for (index, batch) in files.chunked(into: batchSize).enumerated() {
+                for (_, batch) in files.chunked(into: batchSize).enumerated() {
                     group.enter()
                     
                     DispatchQueue.global(qos: .userInitiated).async {
@@ -396,7 +392,7 @@ class UsageManager: ObservableObject {
                                       let modDate = attrs[.modificationDate] as? Date else { return }
                                 
                                 // Check cache first
-                                if let cached = self.cacheManager.getCachedData(for: file) {
+                                if let cached = UltraCacheManager.shared.getCachedData(for: file) {
                                     batchEntries.append(contentsOf: cached)
                                     lock.lock()
                                     cacheHits += 1
@@ -420,7 +416,7 @@ class UsageManager: ObservableObject {
                                             let entry = try decoder.decode(UsageEntry.self, from: data)
                                             
                                             // Convert to cached entry
-                                            let date = self.cacheManager.extractDate(entry.timestamp)
+                                            let date = UltraCacheManager.shared.extractDate(entry.timestamp)
                                             var cost = entry.costUSD
                                             
                                             // Calculate cost if not provided
@@ -452,7 +448,7 @@ class UsageManager: ObservableObject {
                                     }
                                     
                                     // Cache the parsed entries
-                                    self.cacheManager.setCachedData(fileEntries, for: file, modificationDate: modDate)
+                                    UltraCacheManager.shared.setCachedData(fileEntries, for: file, modificationDate: modDate)
                                     
                                     lock.lock()
                                     cacheMisses += 1
