@@ -72,6 +72,9 @@ class UsageManager: ObservableObject {
     private func loadUsageData() async throws -> UsageStats {
         let jsonlFiles = try await findJSONLFiles(in: claudeProjectsPath)
         
+        // EXACT ccusage logic: Fetch pricing data first (like ccusage auto mode)
+        let modelPricing = try await PricingFetcher.shared.fetchModelPricing()
+        
         // Use exact ccusage logic - collect all entries first, then group by date
         var allEntries: [(entry: UsageEntry, date: String)] = []
         
@@ -107,6 +110,7 @@ class UsageManager: ObservableObject {
         
         // Calculate today's usage
         var todayUsage = UsageData()
+        todayUsage.setPricing(modelPricing) // Set pricing for cost calculation
         if let todayEntries = groupedByDate[targetDate] {
             for item in todayEntries {
                 todayUsage.add(item.entry)
@@ -115,6 +119,7 @@ class UsageManager: ObservableObject {
         
         // Calculate this month's usage
         var monthUsage = UsageData()
+        monthUsage.setPricing(modelPricing) // Set pricing for cost calculation
         for (dateKey, entries) in groupedByDate {
             if dateKey.hasPrefix(currentMonth) {
                 for item in entries {
@@ -291,6 +296,13 @@ struct UsageData {
     var cacheReadTokens: Int = 0
     var totalCost: Double = 0.0
     
+    // Store pricing for cost calculation
+    private var modelPricing: [String: ModelPricing]?
+    
+    mutating func setPricing(_ pricing: [String: ModelPricing]) {
+        self.modelPricing = pricing
+    }
+    
     mutating func add(_ entry: UsageEntry) {
         let usage = entry.message.usage
         inputTokens += usage.inputTokens ?? 0
@@ -298,86 +310,27 @@ struct UsageData {
         cacheCreationTokens += usage.cacheCreationInputTokens ?? 0
         cacheReadTokens += usage.cacheReadInputTokens ?? 0
         
-        // Follow ccusage's cost calculation logic
+        // EXACT ccusage logic: calculateCostForEntry() with auto mode
         if let cost = entry.costUSD {
-            // Use pre-calculated cost when available (auto mode behavior)
+            // Use pre-calculated cost when available
             totalCost += cost
-        } else if let model = entry.message.model {
-            // Calculate from tokens using model-specific pricing (like ccusage)
-            let modelCost = calculateCostFromModel(usage: usage, model: model)
-            totalCost += modelCost
-        } else {
-            // No model info, skip this entry (ccusage would return 0)
-            // Don't add anything to totalCost
+        } else if let model = entry.message.model,
+                  let pricing = modelPricing {
+            // Calculate from tokens using ccusage's exact logic
+            if let modelPrice = PricingFetcher.shared.getModelPricing(model, from: pricing) {
+                let cost = PricingFetcher.shared.calculateCostFromTokens(
+                    inputTokens: usage.inputTokens ?? 0,
+                    outputTokens: usage.outputTokens ?? 0,
+                    cacheCreationTokens: usage.cacheCreationInputTokens ?? 0,
+                    cacheReadTokens: usage.cacheReadInputTokens ?? 0,
+                    pricing: modelPrice
+                )
+                totalCost += cost
+            }
+            // If no pricing found, cost is 0 (same as ccusage)
         }
     }
     
-    private func calculateCostFromModel(usage: TokenUsage, model: String) -> Double {
-        // Model name matching like ccusage - try different variations
-        let pricing = getModelPricing(for: model)
-        
-        guard let inputRate = pricing?.inputCost,
-              let outputRate = pricing?.outputCost else {
-            return 0.0 // Return 0 if no pricing found (like ccusage)
-        }
-        
-        let inputCost = Double(usage.inputTokens ?? 0) * inputRate
-        let outputCost = Double(usage.outputTokens ?? 0) * outputRate
-        
-        // Cache costs (optional)
-        let cacheCreationCost = Double(usage.cacheCreationInputTokens ?? 0) * (pricing?.cacheCreationCost ?? 0)
-        let cacheReadCost = Double(usage.cacheReadInputTokens ?? 0) * (pricing?.cacheReadCost ?? 0)
-        
-        return inputCost + outputCost + cacheCreationCost + cacheReadCost
-    }
-    
-    private func getModelPricing(for model: String) -> ModelPricing? {
-        // Try exact model match first
-        if let pricing = getPricingForExactModel(model) {
-            return pricing
-        }
-        
-        // ccusage fallback logic - if model not found, return nil (cost will be 0)
-        return nil
-    }
-    
-    private func getPricingForExactModel(_ model: String) -> ModelPricing? {
-        // Hard-coded pricing from LiteLLM database (like ccusage caches)
-        switch model {
-        case "claude-opus-4-20250514", "claude-4-opus-20250514":
-            // New Opus 4 has same pricing as Sonnet 4!
-            return ModelPricing(
-                inputCost: 3e-06,        // $0.000003 (same as Sonnet 4)
-                outputCost: 1.5e-05,     // $0.000015 (same as Sonnet 4)
-                cacheCreationCost: 0.00000196,  // Actual ccusage rate: $1.96/M tokens
-                cacheReadCost: 0.00000196       // Same rate for both cache types
-            )
-        case "claude-sonnet-4-20250514", "claude-4-sonnet-20250514":
-            return ModelPricing(
-                inputCost: 3e-06,        // $0.000003
-                outputCost: 1.5e-05,     // $0.000015
-                // Reverse-engineered from ccusage actual results
-                cacheCreationCost: 0.00000249,  // Effective rate ccusage seems to use
-                cacheReadCost: 0.00000249       // Same rate for both cache types
-            )
-        case "claude-3-5-sonnet-20241022", "claude-3-5-sonnet-20240620":
-            return ModelPricing(
-                inputCost: 3e-06,        // $0.000003
-                outputCost: 1.5e-05,     // $0.000015
-                cacheCreationCost: 3.75e-06,  // $0.00000375
-                cacheReadCost: 3e-07     // $0.0000003
-            )
-        case "claude-3-sonnet-20240229":
-            return ModelPricing(
-                inputCost: 3e-06,        // $0.000003
-                outputCost: 1.5e-05,     // $0.000015
-                cacheCreationCost: 0,    // No cache pricing
-                cacheReadCost: 0
-            )
-        default:
-            return nil
-        }
-    }
     
     func toUsageStats() -> UsageStatsPeriod {
         return UsageStatsPeriod(
@@ -395,12 +348,6 @@ struct UsageStats {
     let thisMonth: UsageStatsPeriod
 }
 
-struct ModelPricing {
-    let inputCost: Double
-    let outputCost: Double
-    let cacheCreationCost: Double
-    let cacheReadCost: Double
-}
 
 struct UsageStatsPeriod {
     let inputTokens: Int
