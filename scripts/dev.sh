@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 function show_help() {
-    echo -e "${BLUE}Claude Usage MenuBar - Development Script${NC}"
+    echo -e "${BLUE}Claude Code Usage MenuBar - Development Script${NC}"
     echo "=================================================="
     echo ""
     echo "Usage: ./scripts/dev.sh [command]"

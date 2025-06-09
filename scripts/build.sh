@@ -13,12 +13,12 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-APP_NAME="Claude Usage"
+APP_NAME="Claude Code Usage"
 BUNDLE_ID="sh.saqoo.claude-usage-menubar"
 VERSION="1.0.0"
 EXECUTABLE_NAME="ClaudeUsageMenuBar"
 
-echo -e "${BLUE}🚀 Building Claude Usage MenuBar${NC}"
+echo -e "${BLUE}🚀 Building Claude Code Usage MenuBar${NC}"
 echo "=================================================="
 
 # Check if we're in the right directory

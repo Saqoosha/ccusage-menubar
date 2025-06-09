@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDisplayName</key>
-    <string>Claude Usage</string>
+    <string>Claude Code Usage</string>
     <key>CFBundleExecutable</key>
     <string>ClaudeUsageMenuBar</string>
     <key>CFBundleIdentifier</key>
     <string>sh.saqoo.claude-usage-menubar</string>
     <key>CFBundleName</key>
-    <string>ClaudeUsageMenuBar</string>
+    <string>Claude Code Usage</string>
     <key>CFBundleVersion</key>
     <string>1.0.0</string>
     <key>CFBundleShortVersionString</key>

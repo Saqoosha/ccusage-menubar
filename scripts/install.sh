@@ -12,9 +12,9 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-APP_NAME="Claude Usage"
+APP_NAME="Claude Code Usage"
 
-echo -e "${BLUE}🚀 Installing Claude Usage MenuBar${NC}"
+echo -e "${BLUE}🚀 Installing Claude Code Usage MenuBar${NC}"
 echo "=================================================="
 
 # Check if we're in the right directory
@@ -74,7 +74,7 @@ if [[ -d "/Applications/${APP_NAME}.app" ]]; then
     read -p "🚀 Would you like to launch the app now? (y/n): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${YELLOW}🚀 Launching Claude Usage MenuBar...${NC}"
+echo -e "${YELLOW}🚀 Launching Claude Code Usage MenuBar...${NC}"
         open "/Applications/${APP_NAME}.app"
     fi
 else
