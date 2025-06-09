@@ -27,14 +27,17 @@ Perfect for tracking your Claude Code usage and managing costs efficiently!
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/Saqoosha/ccusage-menubar.git
 cd ccusage-menubar
 
-# Run the menubar app
-swift run
+# Install to Applications folder
+./scripts/install.sh
 
-# Or build for release
-swift build -c release
+# Or just build the app
+./scripts/build.sh
+
+# Or run in development mode
+./scripts/dev.sh run
 ```
 
 For detailed build instructions, see [docs/BUILD.md](docs/BUILD.md).

@@ -10,57 +10,65 @@
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/Saqoosha/ccusage-menubar.git
 cd ccusage-menubar
 
-# Build the application
-swift build -c release
+# Option 1: Install directly to Applications folder
+./scripts/install.sh
 
-# Create the .app bundle
-./scripts/create-app-bundle.sh
+# Option 2: Just build the .app bundle
+./scripts/build.sh
 
-# Or run directly in development mode
-swift run
+# Option 3: Run in development mode
+./scripts/dev.sh run
 ```
 
-## Development Build
+## Build Scripts
 
+We provide convenient build scripts for different use cases:
+
+### 🚀 Production Build
 ```bash
-# Build for development (with debug symbols)
-swift build
+./scripts/build.sh
+```
+Creates a `Claude Usage.app` bundle ready for distribution.
 
+### 📱 Install to Applications
+```bash
+./scripts/install.sh
+```
+Builds and installs the app to your Applications folder.
+
+### 🛠️ Development
+```bash
 # Run in development mode
-swift run
+./scripts/dev.sh run
+
+# Build debug version
+./scripts/dev.sh build
 
 # Run tests
-swift test
+./scripts/dev.sh test
+
+# Clean build artifacts
+./scripts/dev.sh clean
+
+# Show all available commands
+./scripts/dev.sh help
 ```
 
-## Release Build
+## Manual Build (Advanced)
+
+If you prefer to build manually:
 
 ```bash
-# Build optimized release version
+# Build release version
 swift build -c release
 
-# The executable will be located at:
-# .build/release/ClaudeUsageMenuBar
-```
-
-## Creating App Bundle
-
-To create a standard macOS app bundle:
-
-```bash
-# Create app bundle structure
+# Create app bundle manually
 mkdir -p "Claude Usage.app/Contents/MacOS"
-
-# Copy executable
 cp .build/release/ClaudeUsageMenuBar "Claude Usage.app/Contents/MacOS/"
-
-# Copy Info.plist
 cp Info.plist "Claude Usage.app/Contents/"
-
-# Set executable permissions
 chmod +x "Claude Usage.app/Contents/MacOS/ClaudeUsageMenuBar"
 ```
 
