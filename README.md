@@ -19,6 +19,7 @@ Perfect for tracking your Claude Code usage and managing costs efficiently!
 - **🎯 Minimal footprint**: Native Swift app with tiny memory usage (~25MB)
 - **🔄 Modern UI**: Built with SwiftUI MenuBarExtra (macOS 13.0+)
 - **💸 Accurate cost tracking**: Shows daily and monthly costs with LiteLLM pricing
+- **🌍 Currency conversion**: Real-time conversion to 33+ currencies with OS auto-detection
 - **📊 Token display**: Input/output token counts with smart formatting
 - **⏰ Auto-refresh**: Configurable refresh intervals (default: 60s)
 - **📈 Advanced caching**: Parallel processing using all CPU cores
@@ -64,6 +65,7 @@ ccusage-menubar/
 ├── docs/                        # Documentation files
 │   ├── BUILD.md                 # Build instructions
 │   ├── OPTIMIZATION_RESULTS.md  # Performance achievements
+│   ├── CURRENCY_CONVERSION.md   # Currency conversion feature details
 │   └── ...                      # Other documentation
 ├── benchmarks/                  # Performance benchmarks and CLI tools
 │   ├── benchmark*.swift         # Performance test suite
@@ -85,6 +87,7 @@ ccusage-menubar/
 
 - [Build Guide](docs/BUILD.md) - How to build and install the app
 - [Claude Configuration](CLAUDE.md) - Technical details for developers
+- [Currency Conversion](docs/CURRENCY_CONVERSION.md) - Multi-currency support details
 
 ## 🎯 Why This App?
 
@@ -101,6 +104,7 @@ Claude Code doesn't provide a built-in usage monitor, making it hard to track co
 The app reads Claude Code's local usage logs stored in `~/.claude/projects/` and processes them to show:
 - Token counts (input/output/cache)
 - Daily and monthly cost calculations
+- Real-time currency conversion (33+ currencies supported)
 - Usage patterns and trends
 
-All processing happens locally - no data is sent anywhere!
+All processing happens locally - no data is sent anywhere except for fetching exchange rates!

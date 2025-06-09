@@ -30,7 +30,7 @@ A native macOS menu bar application built with Swift and SwiftUI that monitors C
 - `Sources/ClaudeUsageMenuBar/UsageManager.swift` - Data loading and management (ObservableObject)
 - `Sources/ClaudeUsageMenuBar/MenuBarLabelView.swift` - Menu bar display (cost + icon)  
 - `Sources/ClaudeUsageMenuBar/MenuBarContentView.swift` - Popup content with detailed stats
-- `Sources/ClaudeUsageMenuBar/SettingsView.swift` - Settings window
+- `Sources/ClaudeUsageMenuBar/CurrencyManager.swift` - Currency conversion and formatting
 - `Sources/ClaudeUsageMenuBar/UltraCacheManager.swift` - Two-level caching system
 - `Sources/ClaudeUsageMenuBar/PricingFetcher.swift` - LiteLLM pricing integration
 - `Sources/ClaudeUsageMenuBar/UltraFastManager.swift` - Memory-based ultra-fast caching
@@ -69,6 +69,9 @@ A native macOS menu bar application built with Swift and SwiftUI that monitors C
 - Fetches latest pricing from LiteLLM on every run
 - Accurate model-specific pricing
 - Special handling for cache tokens
+- **Currency Conversion**: Real-time conversion to 33+ currencies using free exchange API
+- **Auto-Detection**: Uses OS locale to set default currency
+- **Smart Formatting**: NumberFormatter with proper locale support (JPY: 1,234,567)
 
 ## Performance Status ✅ FULLY OPTIMIZED
 
@@ -112,6 +115,7 @@ ccusage-menubar/
 │   ├── UltraCacheManager.swift  # Two-level caching system (memory + disk)
 │   ├── UltraFastManager.swift   # Memory-based ultra-fast caching
 │   ├── PricingFetcher.swift     # LiteLLM pricing integration with 24h cache
+│   ├── CurrencyManager.swift    # Currency conversion and exchange rate management
 │   ├── MenuBarLabelView.swift   # Menu bar display (cost + icon)
 │   ├── MenuBarContentView.swift # Popup content with detailed stats
 │   └── SettingsView.swift       # Settings window with refresh intervals

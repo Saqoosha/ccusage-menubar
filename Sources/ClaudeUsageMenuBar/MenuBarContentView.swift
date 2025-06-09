@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MenuBarContentView: View {
     @EnvironmentObject var usageManager: UsageManager
+    @StateObject private var currencyManager = CurrencyManager.shared
     @State private var isRefreshing = false
     
     var body: some View {
@@ -15,10 +16,14 @@ struct MenuBarContentView: View {
                     Text("Today")
                         .font(.system(size: 15, weight: .medium))
                         .foregroundColor(.primary)
-                    Spacer()
-                    Text(formatCost(usageManager.todayCost ?? 0))
+                    
+                    Spacer(minLength: 20)
+                    
+                    Text(currencyManager.formatCurrency(usageManager.todayCost ?? 0))
                         .font(.system(size: 18, weight: .semibold, design: .monospaced))
                         .foregroundColor(.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
                 
                 HStack(spacing: 16) {
@@ -54,10 +59,14 @@ struct MenuBarContentView: View {
                     Text("This Month")
                         .font(.system(size: 15, weight: .medium))
                         .foregroundColor(.primary)
-                    Spacer()
-                    Text(formatCost(usageManager.monthCost ?? 0))
+                    
+                    Spacer(minLength: 20)
+                    
+                    Text(currencyManager.formatCurrency(usageManager.monthCost ?? 0))
                         .font(.system(size: 18, weight: .semibold, design: .monospaced))
                         .foregroundColor(.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
                 
                 HStack(spacing: 16) {
@@ -88,6 +97,32 @@ struct MenuBarContentView: View {
             //     ChartView()
             //         .frame(height: 120)
             // }
+            
+            Divider()
+            
+            // Settings section
+            HStack {
+                Text("Currency")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                Picker("", selection: $currencyManager.selectedCurrency) {
+                    ForEach(currencyManager.popularCurrencies, id: \.code) { currency in
+                        Text(currency.code).tag(currency.code)
+                    }
+                }
+                .pickerStyle(.menu)
+                .frame(width: 65)
+                .font(.system(size: 11))
+                .onChange(of: currencyManager.selectedCurrency) { _ in
+                    Task {
+                        await currencyManager.currencyChanged()
+                    }
+                }
+            }
+            .padding(.vertical, 4)
             
             Divider()
             
@@ -138,9 +173,6 @@ struct MenuBarContentView: View {
         }
     }
     
-    private func formatCost(_ cost: Double) -> String {
-        return String(format: "$%.2f", cost)
-    }
     
     private func formatLastUpdated() -> String {
         guard let lastUpdate = usageManager.lastUpdated else {
