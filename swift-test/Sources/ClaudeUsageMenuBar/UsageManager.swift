@@ -70,62 +70,89 @@ class UsageManager: ObservableObject {
     }
     
     private func loadUsageData() async throws -> UsageStats {
-        let now = Date()
-        let today = Calendar.current.startOfDay(for: now)
-        let thisMonthStart = Calendar.current.dateInterval(of: .month, for: now)?.start ?? today
-        
         let jsonlFiles = try await findJSONLFiles(in: claudeProjectsPath)
         
-        var todayUsage = UsageData()
-        var monthUsage = UsageData()
+        // Use exact ccusage logic - collect all entries first, then group by date
+        var allEntries: [(entry: UsageEntry, date: String)] = []
         
-        // Process files with early filtering for better performance
+        // Process files like ccusage - line by line
         for file in jsonlFiles {
             do {
                 let entries = try await parseJSONLFile(at: file)
                 
                 for entry in entries {
-                    let entryDate = entry.timestamp
-                    
-                    // Early date filtering - skip entries that are too old
-                    if entryDate < thisMonthStart {
-                        continue
-                    }
-                    
-                    // Only include entries that have valid usage data
-                    let usage = entry.message.usage
-                    guard let inputTokens = usage.inputTokens,
-                          let outputTokens = usage.outputTokens,
-                          inputTokens >= 0,
-                          outputTokens >= 0 else {
-                        continue
-                    }
-                    
-                    // Today's usage - check if entry is from today
-                    if Calendar.current.isDate(entryDate, inSameDayAs: now) {
-                        todayUsage.add(entry)
-                    }
-                    
-                    // This month's usage
-                    if entryDate >= thisMonthStart {
-                        monthUsage.add(entry)
-                    }
+                    // Format date exactly like ccusage
+                    let dateString = formatDateLikeCCusage(entry.timestamp)
+                    allEntries.append((entry: entry, date: dateString))
                 }
             } catch {
-                // Skip files that can't be parsed
+                // Skip files that can't be parsed (like ccusage)
                 continue
+            }
+        }
+        
+        // Group by date using ccusage's Object.groupBy equivalent
+        var groupedByDate: [String: [(entry: UsageEntry, date: String)]] = [:]
+        
+        for item in allEntries {
+            if groupedByDate[item.date] == nil {
+                groupedByDate[item.date] = []
+            }
+            groupedByDate[item.date]?.append(item)
+        }
+        
+        // Get target dates
+        let targetDate = formatDateLikeCCusage(Date()) // Today
+        let currentMonth = String(targetDate.prefix(7)) // YYYY-MM
+        
+        // Calculate today's usage
+        var todayUsage = UsageData()
+        if let todayEntries = groupedByDate[targetDate] {
+            for item in todayEntries {
+                todayUsage.add(item.entry)
+            }
+        }
+        
+        // Calculate this month's usage
+        var monthUsage = UsageData()
+        for (dateKey, entries) in groupedByDate {
+            if dateKey.hasPrefix(currentMonth) {
+                for item in entries {
+                    monthUsage.add(item.entry)
+                }
             }
         }
         
         let todayStats = todayUsage.toUsageStats()
         let monthStats = monthUsage.toUsageStats()
         
-        // Debug output removed for production
-        
         return UsageStats(
             today: todayStats,
             thisMonth: monthStats
         )
+    }
+    
+    // EXACT port of ccusage's formatDate function
+    private func formatDateLikeCCusage(_ date: Date) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        // Convert back to string then parse to ensure consistent behavior
+        let isoString = formatter.string(from: date)
+        guard let parsedDate = formatter.date(from: isoString) else {
+            // Fallback like ccusage does
+            let fallbackFormatter = DateFormatter()
+            fallbackFormatter.dateFormat = "yyyy-MM-dd"
+            fallbackFormatter.timeZone = TimeZone.current
+            return fallbackFormatter.string(from: date)
+        }
+        
+        let calendar = Calendar.current
+        let year = calendar.component(.year, from: parsedDate)
+        let month = calendar.component(.month, from: parsedDate)
+        let day = calendar.component(.day, from: parsedDate)
+        
+        return String(format: "%04d-%02d-%02d", year, month, day)
     }
     
     private func findJSONLFiles(in directory: String) async throws -> [String] {
