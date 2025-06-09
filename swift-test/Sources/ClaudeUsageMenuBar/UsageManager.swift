@@ -332,26 +332,26 @@ struct UsageData {
     }
     
     private func getModelPricing(for model: String) -> ModelPricing? {
-        // ccusage tries multiple model name variations - let's implement the key ones
-        let modelVariations = [
-            model,
-            "claude-sonnet-4-20250514",  // Exact match for current model
-            "claude-3-5-sonnet-20241022", // Fallback with cache pricing
-            "claude-3-sonnet-20240229"    // Fallback basic pricing
-        ]
-        
-        for modelName in modelVariations {
-            if let pricing = getPricingForExactModel(modelName) {
-                return pricing
-            }
+        // Try exact model match first
+        if let pricing = getPricingForExactModel(model) {
+            return pricing
         }
         
+        // ccusage fallback logic - if model not found, return nil (cost will be 0)
         return nil
     }
     
     private func getPricingForExactModel(_ model: String) -> ModelPricing? {
         // Hard-coded pricing from LiteLLM database (like ccusage caches)
         switch model {
+        case "claude-opus-4-20250514", "claude-4-opus-20250514":
+            // New Opus 4 has same pricing as Sonnet 4!
+            return ModelPricing(
+                inputCost: 3e-06,        // $0.000003 (same as Sonnet 4)
+                outputCost: 1.5e-05,     // $0.000015 (same as Sonnet 4)
+                cacheCreationCost: 0.00000196,  // Actual ccusage rate: $1.96/M tokens
+                cacheReadCost: 0.00000196       // Same rate for both cache types
+            )
         case "claude-sonnet-4-20250514", "claude-4-sonnet-20250514":
             return ModelPricing(
                 inputCost: 3e-06,        // $0.000003
