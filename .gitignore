@@ -5,3 +5,9 @@
 .DS_Store
 *.xcworkspace/
 *.xcodeproj/
+
+# Private usage data - NEVER commit these!
+*ccusage*.json
+*usage*.json
+*.usage
+.claude/
