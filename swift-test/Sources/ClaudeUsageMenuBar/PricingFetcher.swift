@@ -20,12 +20,46 @@ class PricingFetcher {
     
     private let litellmPricingURL = "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json"
     private var cachedPricing: [String: ModelPricing]?
+    private var lastFetchTime: Date?
+    private let cacheDuration: TimeInterval = 86400 // 24 hours
     
-    private init() {}
+    private init() {
+        // Load cached pricing from UserDefaults on init
+        loadCachedPricingFromDisk()
+    }
     
-    // EXACT port of fetchModelPricing()
+    // Load cached pricing from UserDefaults
+    private func loadCachedPricingFromDisk() {
+        if let data = UserDefaults.standard.data(forKey: "claudePricingCache"),
+           let cached = try? JSONDecoder().decode([String: ModelPricing].self, from: data),
+           let lastFetch = UserDefaults.standard.object(forKey: "claudePricingCacheDate") as? Date {
+            
+            // Check if cache is still valid (within 24 hours)
+            if Date().timeIntervalSince(lastFetch) < cacheDuration {
+                self.cachedPricing = cached
+                self.lastFetchTime = lastFetch
+                print("📦 Loaded pricing from disk cache (\(cached.count) models)")
+            } else {
+                print("⏰ Pricing cache expired, will fetch fresh data")
+            }
+        }
+    }
+    
+    // Save pricing to UserDefaults
+    private func saveCachedPricingToDisk(_ pricing: [String: ModelPricing]) {
+        if let data = try? JSONEncoder().encode(pricing) {
+            UserDefaults.standard.set(data, forKey: "claudePricingCache")
+            UserDefaults.standard.set(Date(), forKey: "claudePricingCacheDate")
+        }
+    }
+    
+    // EXACT port of fetchModelPricing() with 24h caching
     func fetchModelPricing() async throws -> [String: ModelPricing] {
-        if let cached = cachedPricing {
+        // Check if we have valid cached pricing
+        if let cached = cachedPricing,
+           let lastFetch = lastFetchTime,
+           Date().timeIntervalSince(lastFetch) < cacheDuration {
+            print("💰 Using cached pricing (\(cached.count) models)")
             return cached
         }
         
@@ -55,6 +89,11 @@ class PricingFetcher {
         }
         
         cachedPricing = pricing
+        lastFetchTime = Date()
+        
+        // Save to disk for next time
+        saveCachedPricingToDisk(pricing)
+        
         print("ℹ Loaded pricing for \(pricing.count) models")
         
         return pricing
@@ -124,5 +163,14 @@ class PricingFetcher {
         }
         
         return cost
+    }
+    
+    // Force refresh pricing (for manual refresh button)
+    func refreshPricing() async throws -> [String: ModelPricing] {
+        cachedPricing = nil
+        lastFetchTime = nil
+        UserDefaults.standard.removeObject(forKey: "claudePricingCache")
+        UserDefaults.standard.removeObject(forKey: "claudePricingCacheDate")
+        return try await fetchModelPricing()
     }
 }

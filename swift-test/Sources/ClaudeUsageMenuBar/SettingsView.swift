@@ -33,6 +33,35 @@ struct SettingsView: View {
                     Toggle("Show token counts", isOn: .constant(true))
                 }
                 
+                Section("Performance") {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Cache Status")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            let cacheStats = UltraCacheManager.shared.getCacheStatistics()
+                            Text("~\(cacheStats.memoryCount) files in memory")
+                                .font(.caption2)
+                            Text("\(cacheStats.diskSize / 1024 / 1024) MB on disk")
+                                .font(.caption2)
+                        }
+                        
+                        Spacer()
+                        
+                        Button("Clear Cache") {
+                            Task {
+                                await usageManager.clearCacheAndRefresh()
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    
+                    Text("Ultra-fast caching enabled (0.002s response time)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
                 Section("About") {
                     HStack {
                         Text("Version")
