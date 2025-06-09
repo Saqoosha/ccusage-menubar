@@ -2,6 +2,9 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject var usageManager: UsageManager
+    @State private var selectedInterval: Int = Int(UserDefaults.standard.double(forKey: "refreshInterval")) > 0 
+        ? Int(UserDefaults.standard.double(forKey: "refreshInterval")) 
+        : 60
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -11,13 +14,18 @@ struct SettingsView: View {
             
             Form {
                 Section("Update Interval") {
-                    Picker("Refresh every", selection: .constant(5)) {
-                        Text("1 minute").tag(1)
-                        Text("5 minutes").tag(5)
-                        Text("10 minutes").tag(10)
-                        Text("30 minutes").tag(30)
+                    Picker("Refresh every", selection: $selectedInterval) {
+                        Text("15 seconds").tag(15)
+                        Text("30 seconds").tag(30)
+                        Text("1 minute").tag(60)
+                        Text("2 minutes").tag(120)
+                        Text("5 minutes").tag(300)
+                        Text("10 minutes").tag(600)
                     }
                     .pickerStyle(.menu)
+                    .onChange(of: selectedInterval) { newValue in
+                        usageManager.updateRefreshInterval(TimeInterval(newValue))
+                    }
                 }
                 
                 Section("Display") {

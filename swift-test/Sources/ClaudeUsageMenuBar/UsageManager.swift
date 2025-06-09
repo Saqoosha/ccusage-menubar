@@ -40,11 +40,13 @@ class UsageManager: ObservableObject {
     }
     
     func refreshUsage() async {
-        isLoading = true
+        // Don't set isLoading = true here to keep showing previous values
+        // Only show loading state on initial load
         
         do {
             let usage = try await loadUsageData()
             
+            // Update values only after successful load
             todayInputTokens = usage.today.inputTokens
             todayOutputTokens = usage.today.outputTokens
             todayCost = usage.today.totalCost
@@ -54,19 +56,33 @@ class UsageManager: ObservableObject {
             monthCost = usage.thisMonth.totalCost
             
             lastUpdated = Date()
+            isLoading = false // Clear loading state after first successful load
         } catch {
             print("Failed to load usage data: \(error)")
+            // Keep showing previous values on error
+            isLoading = false
         }
-        
-        isLoading = false
     }
     
     private func startPeriodicRefresh() {
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { _ in
+        // Default to 60 seconds, but can be changed via settings
+        let refreshInterval: TimeInterval = UserDefaults.standard.double(forKey: "refreshInterval") > 0 
+            ? UserDefaults.standard.double(forKey: "refreshInterval") 
+            : 60.0
+        
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: refreshInterval, repeats: true) { _ in
             Task { @MainActor in
                 await self.refreshUsage()
             }
         }
+    }
+    
+    func updateRefreshInterval(_ interval: TimeInterval) {
+        UserDefaults.standard.set(interval, forKey: "refreshInterval")
+        
+        // Restart timer with new interval
+        refreshTimer?.invalidate()
+        startPeriodicRefresh()
     }
     
     private func loadUsageData() async throws -> UsageStats {

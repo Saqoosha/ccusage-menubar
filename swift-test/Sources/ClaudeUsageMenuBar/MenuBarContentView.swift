@@ -3,6 +3,7 @@ import SwiftUI
 struct MenuBarContentView: View {
     @EnvironmentObject var usageManager: UsageManager
     @State private var isRefreshing = false
+    @State private var showingSettings = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -116,6 +117,17 @@ struct MenuBarContentView: View {
                 
                 Spacer()
                 
+                // Settings button
+                Button {
+                    openSettings()
+                } label: {
+                    Image(systemName: "gear")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Settings")
+                
+                // Quit button
                 Button("Quit") {
                     NSApplication.shared.terminate(nil)
                 }
@@ -160,5 +172,24 @@ struct MenuBarContentView: View {
                 isRefreshing = false
             }
         }
+    }
+    
+    private func openSettings() {
+        showingSettings = true
+        
+        let settingsWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        settingsWindow.title = "Claude Usage Settings"
+        settingsWindow.center()
+        settingsWindow.contentView = NSHostingView(
+            rootView: SettingsView()
+                .environmentObject(usageManager)
+        )
+        settingsWindow.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
 }

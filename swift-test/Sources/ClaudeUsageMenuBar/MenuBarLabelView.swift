@@ -9,15 +9,16 @@ struct MenuBarLabelView: View {
             Image(systemName: "brain.head.profile")
                 .foregroundColor(.primary)
             
-            // Cost display
-            if usageManager.isLoading {
-                Text("...")
-                    .font(.system(.caption, design: .monospaced))
-                    .foregroundColor(.secondary)
-            } else if let todayCost = usageManager.todayCost {
+            // Cost display - always show value if available, even while loading
+            if let todayCost = usageManager.todayCost {
                 Text(formatCost(todayCost))
                     .font(.system(.caption, design: .monospaced))
                     .foregroundColor(.primary)
+            } else if usageManager.isLoading {
+                // Only show loading state if no previous value exists
+                Text("...")
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundColor(.secondary)
             } else {
                 Text("--")
                     .font(.system(.caption, design: .monospaced))
