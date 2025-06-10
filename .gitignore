@@ -12,3 +12,5 @@ build/
 *usage*.json
 *.usage
 .claude/
+# .vscode
+.vscode/
