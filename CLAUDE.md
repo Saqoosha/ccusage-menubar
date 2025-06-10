@@ -117,8 +117,7 @@ ccusage-menubar/
 │   ├── PricingFetcher.swift     # LiteLLM pricing integration with 24h cache
 │   ├── CurrencyManager.swift    # Currency conversion and exchange rate management
 │   ├── MenuBarLabelView.swift   # Menu bar display (cost + icon)
-│   ├── MenuBarContentView.swift # Popup content with detailed stats
-│   └── SettingsView.swift       # Settings window with refresh intervals
+│   └── MenuBarContentView.swift # Popup content with detailed stats
 ├── Tests/                       # Test scripts and Swift unit tests
 ├── docs/                        # Documentation files
 │   ├── BUILD.md                 # Build and installation guide

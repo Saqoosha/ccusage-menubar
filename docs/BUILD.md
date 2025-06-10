@@ -31,7 +31,7 @@ We provide convenient build scripts for different use cases:
 ```bash
 ./scripts/build.sh
 ```
-Creates a `Claude Usage.app` bundle ready for distribution.
+Creates a `Claude Code Usage.app` bundle ready for distribution.
 
 ### 📱 Install to Applications
 ```bash
@@ -66,17 +66,33 @@ If you prefer to build manually:
 swift build -c release
 
 # Create app bundle manually
-mkdir -p "Claude Usage.app/Contents/MacOS"
-cp .build/release/ClaudeUsageMenuBar "Claude Usage.app/Contents/MacOS/"
-cp Info.plist "Claude Usage.app/Contents/"
-chmod +x "Claude Usage.app/Contents/MacOS/ClaudeUsageMenuBar"
+mkdir -p "Claude Code Usage.app/Contents/MacOS"
+cp .build/release/ClaudeUsageMenuBar "Claude Code Usage.app/Contents/MacOS/"
+cp Info.plist "Claude Code Usage.app/Contents/"
+chmod +x "Claude Code Usage.app/Contents/MacOS/ClaudeUsageMenuBar"
 ```
 
 ## Distribution
 
 1. **Development**: Use `swift run` for testing
 2. **Local Installation**: Copy the .app bundle to Applications folder
-3. **Release Distribution**: Upload .app bundle to GitHub Releases
+3. **Release Distribution**: See [Release Process](RELEASE_PROCESS.md)
+
+### First Launch (Unsigned App)
+
+Since the app isn't code signed yet, macOS will block it on first launch. Users need to:
+
+**Option 1 - Terminal (Recommended):**
+```bash
+xattr -cr /Applications/Claude\ Code\ Usage.app
+```
+
+**Option 2 - System Settings:**
+- Double-click the app to trigger the security warning
+- Go to System Settings > Privacy & Security
+- Click "Open Anyway" next to the blocked app message
+
+**Note**: The right-click "Open" method doesn't work for menu bar apps.
 
 ## Project Structure
 
@@ -106,15 +122,16 @@ swift build
 
 **Error: Permission denied**
 ```bash
-chmod +x "Claude Usage.app/Contents/MacOS/ClaudeUsageMenuBar"
+chmod +x "Claude Code Usage.app/Contents/MacOS/ClaudeUsageMenuBar"
 ```
 
 ### Runtime Issues
 
 **App doesn't appear in menu bar**
-- Check System Settings → Control Center → Menu Bar items
-- Ensure app has proper permissions
-- Try quitting and restarting the app
+- Look for the cost display (e.g., $0.00) in your menu bar
+- If using a menu bar manager (Bartender, etc.), check there
+- The app has no Dock icon (it's a menu bar only app)
+- Try quitting via Activity Monitor and restarting
 
 **Performance issues**
 - Clear cache: `rm -rf ~/.claude_ultra_cache/`
