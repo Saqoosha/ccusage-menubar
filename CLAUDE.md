@@ -151,6 +151,13 @@ ccusage-menubar/
 - Verify all features work correctly with actual Claude Code data
 - Check that the menu bar display updates properly
 
+**Documentation Updates:**
+- **IMPORTANT**: Always update both `README.md` and `README.ja.md` together
+- Keep English and Japanese versions in sync
+- When adding features, update both READMEs
+- When changing installation steps, update both READMEs
+- Commit both files together to maintain consistency
+
 **Known Issues:**
 - App requires Gatekeeper bypass on first launch (not code signed)
 - Menu bar item may be hidden by menu bar management utilities
