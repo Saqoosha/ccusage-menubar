@@ -159,9 +159,8 @@ ccusage-menubar/
 - Commit both files together to maintain consistency
 
 **Known Issues:**
-- App requires Gatekeeper bypass on first launch (not code signed)
 - Menu bar item may be hidden by menu bar management utilities
-- Right-click "Open" method doesn't work for menu bar apps
+- Right-click "Open" method doesn't work for menu bar apps (it's a menu bar app)
 
 ## Important Implementation Details
 
@@ -203,9 +202,9 @@ ccusage-menubar/
 
 ## Release Status
 
-- **Current Version**: v1.0.0 (Released)
+- **Current Version**: v1.1.0 (Released)
 - **Bundle ID**: `sh.saqoo.ccusage-menubar`
-- **Code Signing**: Not yet implemented (users need to bypass Gatekeeper)
+- **Code Signing**: ✅ Notarized by Apple (no Gatekeeper warnings)
 - **Distribution**: GitHub Releases with automated release process
 
 ## Completed Features ✅
@@ -230,11 +229,10 @@ ccusage-menubar/
 
 ## Future Improvements
 
-1. **Code Signing & Distribution**
-   - Apple Developer account for code signing
-   - Notarization for easier installation
+1. **Distribution Enhancements**
    - Homebrew formula
    - Auto-update functionality
+   - Sparkle framework integration
 
 2. **Advanced Features**
    - Real-time file watching (FSEvents)

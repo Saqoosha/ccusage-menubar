@@ -35,17 +35,7 @@ Perfect for tracking your Claude Code usage and managing costs efficiently!
 1. Download the latest release from [GitHub Releases](https://github.com/Saqoosha/ccusage-menubar/releases)
 2. Unzip `Claude-Code-Usage-v*.zip`
 3. Move `Claude Code Usage.app` to your Applications folder
-4. **Important**: Since the app isn't code signed yet, you need to bypass Gatekeeper:
-   
-   **Option 1 - Terminal (Recommended):**
-   ```bash
-   xattr -cr /Applications/Claude\ Code\ Usage.app
-   ```
-   
-   **Option 2 - System Settings:**
-   - Double-click the app to trigger the security warning
-   - Go to System Settings > Privacy & Security
-   - Click "Open Anyway" next to the blocked app message
+4. The app is now **notarized by Apple** - just double-click to launch! No security warnings!
 
 5. Launch the app and look for the cost display in your menu bar (e.g., $0.00)
 
