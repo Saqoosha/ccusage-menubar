@@ -1,0 +1,24 @@
+# Apple Notarization Configuration Template
+# Copy this file to .notarization-config and fill in your details
+
+# Apple Developer Account
+APPLE_ID="your-apple-id@example.com"
+TEAM_ID="YOUR_TEAM_ID"  # 10-character team ID from Developer Portal
+
+# App Information
+BUNDLE_ID="sh.saqoo.claude-usage-menubar"
+APP_NAME="Claude Code Usage"
+
+# Code Signing
+SIGNING_IDENTITY="Developer ID Application: Your Name (TEAM_ID)"
+
+# Notarization Profile Name (will be created by setup script)
+NOTARY_PROFILE="claude-usage-notary"
+
+# Optional: App-specific password (recommended to use keychain profile instead)
+# APP_PASSWORD="xxxx-xxxx-xxxx-xxxx"  # Generate at appleid.apple.com
+
+# Advanced Options (usually don't need to change)
+# NOTARIZATION_TIMEOUT=600  # Timeout in seconds for notarization
+# HARDENED_RUNTIME=true     # Enable hardened runtime (required for notarization)
+# TIMESTAMP_SERVER="http://timestamp.apple.com/ts01"  # Apple's timestamp server
