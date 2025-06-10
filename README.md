@@ -24,7 +24,28 @@ Perfect for tracking your Claude Code usage and managing costs efficiently!
 - **⏰ Auto-refresh**: Configurable refresh intervals (default: 60s)
 - **📈 Advanced caching**: Parallel processing using all CPU cores
 
-## 🚀 Quick Start
+## 📦 Installation
+
+### Download Pre-built Release (Recommended)
+
+1. Download the latest release from [GitHub Releases](https://github.com/Saqoosha/ccusage-menubar/releases)
+2. Unzip `Claude-Code-Usage-v*.zip`
+3. Move `Claude Code Usage.app` to your Applications folder
+4. **Important**: Since the app isn't code signed yet, you need to bypass Gatekeeper:
+   
+   **Option 1 - Terminal (Recommended):**
+   ```bash
+   xattr -cr /Applications/Claude\ Code\ Usage.app
+   ```
+   
+   **Option 2 - System Settings:**
+   - Double-click the app to trigger the security warning
+   - Go to System Settings > Privacy & Security
+   - Click "Open Anyway" next to the blocked app message
+
+5. Launch the app and look for the cost display in your menu bar (e.g., $0.00)
+
+### Build from Source
 
 ```bash
 # Clone the repository
@@ -82,6 +103,15 @@ ccusage-menubar/
 
 - macOS 13.0 (Ventura) or later
 - Claude Code installed and used (creates local usage logs)
+
+## 🖱️ Usage
+
+This is a **menu bar app** - it runs in the background without a Dock icon:
+
+- **Find it**: Look for the cost display in your menu bar (top-right of screen)
+- **View details**: Click the cost to see daily/monthly breakdown
+- **Quit**: Click the menu bar item and select "Quit"
+- **Hidden?**: If you use a menu bar manager (like Bartender), check there
 
 ## 📖 Documentation
 
