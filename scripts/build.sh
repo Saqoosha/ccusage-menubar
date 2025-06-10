@@ -14,9 +14,16 @@ NC='\033[0m' # No Color
 
 # Configuration
 APP_NAME="Claude Code Usage"
-BUNDLE_ID="sh.saqoo.claude-usage-menubar"
-VERSION="1.0.0"
+BUNDLE_ID="sh.saqoo.ccusage-menubar"
 EXECUTABLE_NAME="ClaudeUsageMenuBar"
+
+# Read version from VERSION file
+if [[ -f "VERSION" ]]; then
+    VERSION=$(cat VERSION)
+else
+    echo -e "${RED}❌ Error: VERSION file not found${NC}"
+    exit 1
+fi
 
 echo -e "${BLUE}🚀 Building Claude Code Usage MenuBar${NC}"
 echo "=================================================="
@@ -51,8 +58,10 @@ mkdir -p "build/${APP_NAME}.app/Contents/Resources"
 # Copy executable
 cp ".build/release/${EXECUTABLE_NAME}" "build/${APP_NAME}.app/Contents/MacOS/"
 
-# Copy Info.plist
+# Update Info.plist with current version
 cp "Info.plist" "build/${APP_NAME}.app/Contents/"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${VERSION}" "build/${APP_NAME}.app/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION}" "build/${APP_NAME}.app/Contents/Info.plist"
 
 # Set executable permissions
 chmod +x "build/${APP_NAME}.app/Contents/MacOS/${EXECUTABLE_NAME}"
@@ -89,6 +98,10 @@ echo ""
 echo -e "${BLUE}🎯 Next Steps:${NC}"
 echo "1. Test the app: open 'build/${APP_NAME}.app'"
 echo "2. Copy to Applications: cp -r 'build/${APP_NAME}.app' /Applications/"
-echo "3. Or distribute via GitHub Releases"
+echo "3. For distribution: ./scripts/build-and-notarize.sh --release"
+echo "4. Or distribute via GitHub Releases"
 echo ""
-echo -e "${YELLOW}💡 Tip: You can also run 'scripts/install.sh' to install directly${NC}"
+echo -e "${YELLOW}💡 Tips:${NC}"
+echo "• Run 'scripts/install.sh' to install directly"
+echo "• Run 'scripts/setup-notarization.sh' to configure Apple notarization"
+echo "• See docs/NOTARIZATION.md for distribution guide"

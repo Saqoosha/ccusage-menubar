@@ -7,7 +7,7 @@
     <key>CFBundleExecutable</key>
     <string>ClaudeUsageMenuBar</string>
     <key>CFBundleIdentifier</key>
-    <string>sh.saqoo.claude-usage-menubar</string>
+    <string>sh.saqoo.ccusage-menubar</string>
     <key>CFBundleName</key>
     <string>Claude Code Usage</string>
     <key>CFBundleVersion</key>
