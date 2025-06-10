@@ -18,6 +18,17 @@ A native macOS menu bar application built with Swift and SwiftUI that monitors C
 - `swift package update` - Update dependencies
 - `swift package clean` - Clean build artifacts
 
+**Release Process:**
+- `./scripts/release.sh` - Create a patch release
+- `./scripts/release.sh minor` - Create a minor release
+- `./scripts/release.sh major` - Create a major release
+- `./scripts/release.sh --yes` - Non-interactive mode
+
+**Development Scripts:**
+- `./scripts/dev.sh run` - Run in development mode
+- `./scripts/build.sh` - Build release version
+- `./scripts/install.sh` - Install to Applications folder
+
 ## Architecture
 
 **Modern SwiftUI Approach:**
@@ -132,6 +143,19 @@ ccusage-menubar/
 └── artifacts/                   # Generated files and build outputs
 ```
 
+## Important Notes for Development
+
+**Testing Before Release:**
+- Always test the built app before creating a release
+- Use `xattr -cr "build/Claude Code Usage.app"` to bypass Gatekeeper for testing
+- Verify all features work correctly with actual Claude Code data
+- Check that the menu bar display updates properly
+
+**Known Issues:**
+- App requires Gatekeeper bypass on first launch (not code signed)
+- Menu bar item may be hidden by menu bar management utilities
+- Right-click "Open" method doesn't work for menu bar apps
+
 ## Important Implementation Details
 
 **SwiftUI MenuBarExtra Benefits:**
@@ -170,19 +194,49 @@ ccusage-menubar/
 - Memory usage profiling
 - Verify accuracy matches ccusage with various test scripts in `tests/`
 
-## Next Steps
+## Release Status
 
-1. **MenuBar App Integration**
-   - Port `UltraCacheManager` to main app
-   - Add progress indicators
-   - Implement background updates
+- **Current Version**: v1.0.0 (Released)
+- **Bundle ID**: `sh.saqoo.ccusage-menubar`
+- **Code Signing**: Not yet implemented (users need to bypass Gatekeeper)
+- **Distribution**: GitHub Releases with automated release process
+
+## Completed Features ✅
+
+1. **Performance Optimization**
+   - UltraCacheManager fully integrated
+   - Instant cached data display
+   - Background updates via configurable intervals
+   - 25x performance improvement achieved
 
 2. **User Experience**
-   - Show cached data immediately
-   - Add loading animations
-   - Implement pull-to-refresh
+   - Clean, minimal menu bar interface
+   - Multi-currency support with auto-detection
+   - Real-time cost updates
+   - Simplified UI (removed settings window for better UX)
 
-3. **Advanced Features**
-   - Real-time file watching
-   - Export usage reports
-   - Model-specific breakdowns
+3. **Development Infrastructure**
+   - Automated release process (`scripts/release.sh`)
+   - Comprehensive documentation
+   - Performance benchmarking suite
+   - Build and installation scripts
+
+## Future Improvements
+
+1. **Code Signing & Distribution**
+   - Apple Developer account for code signing
+   - Notarization for easier installation
+   - Homebrew formula
+   - Auto-update functionality
+
+2. **Advanced Features**
+   - Real-time file watching (FSEvents)
+   - Usage history graphs
+   - Export usage reports (CSV/JSON)
+   - Model-specific cost breakdowns
+   - Usage alerts/notifications
+
+3. **UI Enhancements**
+   - Dark/light mode icon variants
+   - Customizable display format
+   - Mini graphs in popup view
