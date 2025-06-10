@@ -142,3 +142,7 @@ The app reads Claude Code's local usage logs stored in `~/.claude/projects/` and
 - Usage patterns and trends
 
 All processing happens locally - no data is sent anywhere except for fetching exchange rates!
+
+## 🙏 Acknowledgments
+
+Special thanks to [ryoppippi/ccusage](https://github.com/ryoppippi/ccusage) - the original CLI tool that inspired this menu bar app. This project heavily references ccusage's excellent cost calculation logic and LiteLLM integration to ensure accurate pricing.
