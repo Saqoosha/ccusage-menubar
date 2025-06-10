@@ -38,6 +38,7 @@ show_help() {
     echo "  --no-build    Skip building the app"
     echo "  --no-github   Skip creating GitHub release"
     echo "  --draft       Create GitHub release as draft"
+    echo "  --yes, -y     Non-interactive mode (auto-confirm all prompts)"
     echo "  --help, -h    Show this help message"
     echo ""
     echo "Examples:"
@@ -45,6 +46,7 @@ show_help() {
     echo "  $0 minor        # Bump minor version and release"
     echo "  $0 1.2.0        # Set version to 1.2.0 and release"
     echo "  $0 patch --draft # Create draft release"
+    echo "  $0 1.0.0 --yes  # Non-interactive release"
 }
 
 # Function to bump version
@@ -96,6 +98,28 @@ build_app() {
     # Run build script
     if ./scripts/build.sh; then
         echo -e "${GREEN}✅ Build completed successfully${NC}"
+        
+        # Test the built app
+        echo -e "${YELLOW}🧪 Testing built app...${NC}"
+        local app_path="build/${APP_NAME}.app"
+        
+        # Remove quarantine attribute for testing
+        xattr -cr "$app_path" 2>/dev/null || true
+        
+        # Try to launch the app briefly
+        if timeout 3s "$app_path/Contents/MacOS/${EXECUTABLE_NAME}" 2>/dev/null; then
+            echo -e "${GREEN}✅ App launches successfully${NC}"
+        else
+            # Check if it failed due to timeout (which is expected) or actual error
+            if [[ $? -eq 124 ]]; then
+                echo -e "${GREEN}✅ App launches successfully (timeout expected)${NC}"
+            else
+                echo -e "${RED}❌ App failed to launch - please test manually${NC}"
+                echo "You may need to check code signing or other issues"
+                return 1
+            fi
+        fi
+        
         return 0
     else
         echo -e "${RED}❌ Build failed${NC}"
@@ -107,14 +131,12 @@ build_app() {
 create_archive() {
     local version=$1
     local app_path="build/${APP_NAME}.app"
-    local zip_name="${APP_NAME}-v${version}.zip"
+    local zip_name="${APP_NAME// /-}-v${version}.zip"  # Replace spaces with hyphens
     
     echo -e "${YELLOW}📦 Creating zip archive...${NC}"
     
-    # Create zip
-    cd build
-    zip -r "$zip_name" "${APP_NAME}.app" -x "*.DS_Store"
-    cd ..
+    # Create zip in build directory
+    (cd build && zip -r "$zip_name" "${APP_NAME}.app" -x "*.DS_Store")
     
     if [[ -f "build/$zip_name" ]]; then
         local zip_size=$(du -h "build/$zip_name" | cut -f1)
@@ -230,6 +252,7 @@ main() {
     local skip_build=false
     local skip_github=false
     local draft_flag=""
+    local non_interactive=false
     
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -244,6 +267,10 @@ main() {
                 ;;
             --draft)
                 draft_flag="--draft"
+                shift
+                ;;
+            --yes|-y)
+                non_interactive=true
                 shift
                 ;;
             --help|-h)
@@ -270,11 +297,15 @@ main() {
     if [[ -n $(git status -s) ]]; then
         echo -e "${YELLOW}⚠️  Warning: You have uncommitted changes${NC}"
         echo "These will be included in the version bump commit."
-        read -p "Continue? (y/N) " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            echo "Aborted."
-            exit 1
+        if [[ "$non_interactive" != true ]]; then
+            read -p "Continue? (y/N) " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                echo "Aborted."
+                exit 1
+            fi
+        else
+            echo "Continuing in non-interactive mode..."
         fi
     fi
     
@@ -304,11 +335,15 @@ main() {
         echo "  5. Create GitHub release${draft_flag:+ (draft)}"
     fi
     echo ""
-    read -p "Proceed with release? (y/N) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "Aborted."
-        exit 1
+    if [[ "$non_interactive" != true ]]; then
+        read -p "Proceed with release? (y/N) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Aborted."
+            exit 1
+        fi
+    else
+        echo "Proceeding in non-interactive mode..."
     fi
     
     echo ""

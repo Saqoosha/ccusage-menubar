@@ -68,6 +68,21 @@ Only create tag without GitHub release.
 - [ ] Code reviewed and merged to main
 - [ ] CHANGELOG.md updated with changes
 - [ ] Documentation updated if needed
+- [ ] **Test release build locally**:
+  ```bash
+  # Build the app
+  ./scripts/build.sh
+  
+  # Remove quarantine for testing
+  xattr -cr "build/Claude Code Usage.app"
+  
+  # Test the app
+  open "build/Claude Code Usage.app"
+  
+  # Verify all features work correctly
+  ```
+- [ ] Check for any hardcoded versions or paths
+- [ ] Ensure no sensitive information in code
 
 ### 2. Run Release Script
 ```bash
@@ -178,9 +193,43 @@ The release script automatically generates release notes from git commits. To en
 
 3. The script excludes version bump commits automatically
 
+## Code Signing and Gatekeeper
+
+Currently, the app is not code signed, which means users will see a security warning on first launch.
+
+### For Users
+Include clear instructions in release notes:
+1. Right-click and select "Open" method
+2. Terminal command: `xattr -cr /Applications/Claude\ Code\ Usage.app`
+3. System Settings > Privacy & Security > "Open Anyway"
+
+### For Future Releases
+Consider implementing code signing:
+1. Get Apple Developer Account ($99/year)
+2. Create Developer ID certificate
+3. Use notarization scripts in `scripts/` directory
+4. See `docs/NOTARIZATION.md` for full guide
+
+## Testing Release Builds
+
+**IMPORTANT**: Always test the actual release build before publishing:
+
+```bash
+# Test release without publishing
+./scripts/release.sh --no-github
+
+# Test the built app
+xattr -cr "build/Claude Code Usage.app"
+open "build/Claude Code Usage.app"
+
+# If everything works, create the actual release
+./scripts/release.sh 1.0.0 --yes
+```
+
 ## Future Improvements
 
 - [ ] Automated testing before release
-- [ ] Notarization support (when needed)
+- [ ] Code signing and notarization
 - [ ] Homebrew formula updates
 - [ ] Auto-update functionality
+- [ ] Automated release notes from commits
