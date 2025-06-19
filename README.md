@@ -18,11 +18,15 @@ Perfect for tracking your Claude Code usage and managing costs efficiently!
 ## ✨ Features
 
 - **🚀 Ultra-fast performance**: 0.57s loading (was 15+ seconds before optimization)
-- **⚡ Smart caching**: Two-level cache system for instant updates
+- **⚡ Smart caching**: Two-level cache system with deduplication for instant updates
 - **💰 Real-time monitoring**: Tracks Claude Code usage from local data files
 - **🎯 Minimal footprint**: Native Swift app with tiny memory usage (~25MB)
 - **🔄 Modern UI**: Built with SwiftUI MenuBarExtra (macOS 13.0+)
 - **💸 Accurate cost tracking**: Shows daily and monthly costs with LiteLLM pricing
+- **🔢 Cost calculation modes** (v1.2.0): Three modes matching ccusage CLI
+  - **Auto** (default): Uses pre-calculated costs when available, calculates from tokens otherwise
+  - **Calculate**: Always calculates from current token pricing
+  - **Display**: Only shows pre-calculated costs
 - **🌍 Currency conversion**: Real-time conversion to 33+ currencies with OS auto-detection
 - **📊 Token display**: Input/output token counts with smart formatting
 - **⏰ Auto-refresh**: Configurable refresh intervals (default: 60s)
