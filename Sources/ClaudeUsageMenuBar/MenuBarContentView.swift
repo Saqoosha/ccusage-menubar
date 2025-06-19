@@ -101,24 +101,50 @@ struct MenuBarContentView: View {
             Divider()
             
             // Settings section
-            HStack {
-                Text("Currency")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
-                
-                Spacer()
-                
-                Picker("", selection: $currencyManager.selectedCurrency) {
-                    ForEach(currencyManager.popularCurrencies, id: \.code) { currency in
-                        Text(currency.code).tag(currency.code)
+            VStack(spacing: 8) {
+                // Currency setting
+                HStack {
+                    Text("Currency")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    Picker("", selection: $currencyManager.selectedCurrency) {
+                        ForEach(currencyManager.popularCurrencies, id: \.code) { currency in
+                            Text(currency.code).tag(currency.code)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .frame(width: 65)
+                    .font(.system(size: 11))
+                    .onChange(of: currencyManager.selectedCurrency) { _ in
+                        Task {
+                            await currencyManager.currencyChanged()
+                        }
                     }
                 }
-                .pickerStyle(.menu)
-                .frame(width: 65)
-                .font(.system(size: 11))
-                .onChange(of: currencyManager.selectedCurrency) { _ in
-                    Task {
-                        await currencyManager.currencyChanged()
+                
+                // Cost Mode setting
+                HStack {
+                    Text("Cost Mode")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    Picker("", selection: $usageManager.costMode) {
+                        ForEach(CostMode.allCases, id: \.self) { mode in
+                            Text(mode.displayName)
+                                .tag(mode)
+                                .help(mode.description)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .frame(width: 85)
+                    .font(.system(size: 11))
+                    .onChange(of: usageManager.costMode) { newMode in
+                        usageManager.setCostMode(newMode)
                     }
                 }
             }

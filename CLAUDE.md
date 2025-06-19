@@ -76,8 +76,11 @@ A native macOS menu bar application built with Swift and SwiftUI that monitors C
 ```
 
 **Cost Calculation:**
-- Uses exact ccusage logic (auto mode)
-- Fetches latest pricing from LiteLLM on every run
+- **Three Calculation Modes** (matching ccusage CLI):
+  - `Auto` (default): Uses pre-calculated costUSD if available, otherwise calculates from tokens
+  - `Calculate`: Always calculates from current token pricing, ignoring costUSD
+  - `Display`: Only uses pre-calculated costUSD values, shows 0 if unavailable
+- Fetches latest pricing from LiteLLM on every run (except in Display mode)
 - Accurate model-specific pricing
 - Special handling for cache tokens
 - **Currency Conversion**: Real-time conversion to 33+ currencies using free exchange API
@@ -219,7 +222,8 @@ ccusage-menubar/
    - Clean, minimal menu bar interface
    - Multi-currency support with auto-detection
    - Real-time cost updates
-   - Simplified UI (removed settings window for better UX)
+   - **Cost calculation modes**: Auto, Calculate, Display (matching ccusage CLI)
+   - Simplified UI with integrated settings
 
 3. **Development Infrastructure**
    - Automated release process (`scripts/release.sh`)

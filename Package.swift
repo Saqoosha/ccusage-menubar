@@ -24,18 +24,7 @@ let package = Package(
         .testTarget(
             name: "ClaudeUsageMenuBarTests",
             dependencies: ["ClaudeUsageMenuBar"],
-            path: "tests",
-            exclude: [
-                "check_costUSD_field.py",
-                "check_litellm_pricing.py", 
-                "compare_cost_not_tokens.py",
-                "compare_json.py",
-                "find_correct_opus_price.py",
-                "find_exact_cache_rate.py",
-                "reverse_engineer_pricing.py",
-                "test_cost.py",
-                "test_all.sh"
-            ]
+            path: "Tests/ClaudeUsageMenuBarTests"
         ),
     ]
 )
