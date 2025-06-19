@@ -13,6 +13,7 @@ class UsageManager: ObservableObject {
     
     @Published var lastUpdated: Date? = nil
     @Published var isLoading: Bool = false
+    @Published var costMode: CostMode = .auto
     
     private var refreshTimer: Timer?
     private let claudeProjectsPath: String
@@ -23,6 +24,12 @@ class UsageManager: ObservableObject {
             .appendingPathComponent(".claude")
             .appendingPathComponent("projects")
             .path
+        
+        // Load saved cost mode
+        if let savedMode = UserDefaults.standard.string(forKey: "costMode"),
+           let mode = CostMode(rawValue: savedMode) {
+            self.costMode = mode
+        }
         
         // Try to load cached values immediately for instant display
         loadCachedValues()
@@ -113,6 +120,16 @@ class UsageManager: ObservableObject {
         }
     }
     
+    func setCostMode(_ mode: CostMode) {
+        self.costMode = mode
+        UserDefaults.standard.set(mode.rawValue, forKey: "costMode")
+        
+        // Refresh usage data with new mode
+        Task {
+            await refreshUsage()
+        }
+    }
+    
     private func loadUsageDataOptimized() async throws -> UsageStats {
         let startTime = Date()
         print("\n🚀 Starting optimized usage data loading...")
@@ -124,12 +141,17 @@ class UsageManager: ObservableObject {
         let fileDiscoveryTime = fileEndTime.timeIntervalSince(fileStartTime)
         print("   📁 File discovery: \(String(format: "%.3f", fileDiscoveryTime))s (\(jsonlFiles.count) files)")
         
-        // Measure pricing data fetch
-        let pricingStartTime = Date()
-        let modelPricing = try await PricingFetcher.shared.fetchModelPricing()
-        let pricingEndTime = Date()
-        let pricingFetchTime = pricingEndTime.timeIntervalSince(pricingStartTime)
-        print("   💰 Pricing fetch: \(String(format: "%.3f", pricingFetchTime))s")
+        // Measure pricing data fetch (skip if display mode)
+        var modelPricing: [String: ModelPricing] = [:]
+        if costMode != .display {
+            let pricingStartTime = Date()
+            modelPricing = try await PricingFetcher.shared.fetchModelPricing()
+            let pricingEndTime = Date()
+            let pricingFetchTime = pricingEndTime.timeIntervalSince(pricingStartTime)
+            print("   💰 Pricing fetch: \(String(format: "%.3f", pricingFetchTime))s")
+        } else {
+            print("   💰 Pricing fetch skipped (display mode)")
+        }
         
         // Get today and month dates
         let todayDate = cacheManager.extractDate(Date())
@@ -365,6 +387,9 @@ class UsageManager: ObservableObject {
     }
     
     private func processFilesInParallel(_ files: [String], modelPricing: [String: ModelPricing]) async -> [UltraCachedEntry] {
+        // Capture cost mode before entering async context
+        let currentCostMode = self.costMode
+        
         return await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
                 
@@ -374,6 +399,9 @@ class UsageManager: ObservableObject {
                 let group = DispatchGroup()
                 var cacheHits = 0
                 var cacheMisses = 0
+                
+                // Track processed entries for deduplication
+                var processedHashes = Set<String>()
                 
                 // Process files in parallel
                 let batchSize = max(1, files.count / (ProcessInfo.processInfo.activeProcessorCount * 2))
@@ -393,7 +421,24 @@ class UsageManager: ObservableObject {
                                 
                                 // Check cache first
                                 if let cached = UltraCacheManager.shared.getCachedData(for: file) {
-                                    batchEntries.append(contentsOf: cached)
+                                    // Apply deduplication to cached entries
+                                    var dedupedCachedEntries: [UltraCachedEntry] = []
+                                    
+                                    for entry in cached {
+                                        if let hash = entry.deduplicationHash {
+                                            lock.lock()
+                                            if !processedHashes.contains(hash) {
+                                                processedHashes.insert(hash)
+                                                dedupedCachedEntries.append(entry)
+                                            }
+                                            lock.unlock()
+                                        } else {
+                                            // Old cache entries without dedup info
+                                            dedupedCachedEntries.append(entry)
+                                        }
+                                    }
+                                    
+                                    batchEntries.append(contentsOf: dedupedCachedEntries)
                                     lock.lock()
                                     cacheHits += 1
                                     lock.unlock()
@@ -415,20 +460,59 @@ class UsageManager: ObservableObject {
                                             let data = trimmedLine.data(using: .utf8)!
                                             let entry = try decoder.decode(UsageEntry.self, from: data)
                                             
+                                            // Create unique hash for deduplication (matching ccusage)
+                                            var shouldSkip = false
+                                            if let messageId = entry.message.id,
+                                               let requestId = entry.requestId {
+                                                let uniqueHash = "\(messageId):\(requestId)"
+                                                lock.lock()
+                                                if processedHashes.contains(uniqueHash) {
+                                                    shouldSkip = true
+                                                } else {
+                                                    processedHashes.insert(uniqueHash)
+                                                }
+                                                lock.unlock()
+                                                
+                                                if shouldSkip {
+                                                    continue
+                                                }
+                                            }
+                                            
                                             // Convert to cached entry
                                             let date = UltraCacheManager.shared.extractDate(entry.timestamp)
-                                            var cost = entry.costUSD
+                                            var cost: Double? = nil
                                             
-                                            // Calculate cost if not provided
-                                            if cost == nil, let model = entry.message.model,
-                                               let modelPrice = PricingFetcher.shared.getModelPricing(model, from: modelPricing) {
-                                                cost = PricingFetcher.shared.calculateCostFromTokens(
-                                                    inputTokens: entry.message.usage.inputTokens ?? 0,
-                                                    outputTokens: entry.message.usage.outputTokens ?? 0,
-                                                    cacheCreationTokens: entry.message.usage.cacheCreationInputTokens ?? 0,
-                                                    cacheReadTokens: entry.message.usage.cacheReadInputTokens ?? 0,
-                                                    pricing: modelPrice
-                                                )
+                                            // Calculate cost based on selected mode
+                                            switch currentCostMode {
+                                            case .display:
+                                                // Only use pre-calculated costUSD
+                                                cost = entry.costUSD
+                                            case .calculate:
+                                                // Always calculate from tokens
+                                                if let model = entry.message.model,
+                                                   let modelPrice = PricingFetcher.shared.getModelPricing(model, from: modelPricing) {
+                                                    cost = PricingFetcher.shared.calculateCostFromTokens(
+                                                        inputTokens: entry.message.usage.inputTokens ?? 0,
+                                                        outputTokens: entry.message.usage.outputTokens ?? 0,
+                                                        cacheCreationTokens: entry.message.usage.cacheCreationInputTokens ?? 0,
+                                                        cacheReadTokens: entry.message.usage.cacheReadInputTokens ?? 0,
+                                                        pricing: modelPrice
+                                                    )
+                                                }
+                                            case .auto:
+                                                // Use costUSD if available, otherwise calculate
+                                                if let costUSD = entry.costUSD {
+                                                    cost = costUSD
+                                                } else if let model = entry.message.model,
+                                                          let modelPrice = PricingFetcher.shared.getModelPricing(model, from: modelPricing) {
+                                                    cost = PricingFetcher.shared.calculateCostFromTokens(
+                                                        inputTokens: entry.message.usage.inputTokens ?? 0,
+                                                        outputTokens: entry.message.usage.outputTokens ?? 0,
+                                                        cacheCreationTokens: entry.message.usage.cacheCreationInputTokens ?? 0,
+                                                        cacheReadTokens: entry.message.usage.cacheReadInputTokens ?? 0,
+                                                        pricing: modelPrice
+                                                    )
+                                                }
                                             }
                                             
                                             let cachedEntry = UltraCachedEntry(
@@ -438,7 +522,9 @@ class UsageManager: ObservableObject {
                                                 cacheCreateTokens: entry.message.usage.cacheCreationInputTokens ?? 0,
                                                 cacheReadTokens: entry.message.usage.cacheReadInputTokens ?? 0,
                                                 costUSD: cost,
-                                                model: entry.message.model
+                                                model: entry.message.model,
+                                                messageId: entry.message.id,
+                                                requestId: entry.requestId
                                             )
                                             fileEntries.append(cachedEntry)
                                         } catch {
@@ -475,6 +561,7 @@ class UsageManager: ObservableObject {
                 
                 print("   Parallel processing completed in \(String(format: "%.3f", parallelTime))s")
                 print("   Cache hits: \(cacheHits) (\(String(format: "%.1f", Double(cacheHits) / Double(files.count) * 100))%)")
+                print("   Deduplicated entries: \(processedHashes.count)")
                 print("   Cache misses: \(cacheMisses)")
                 
                 continuation.resume(returning: allEntries)
@@ -524,9 +611,10 @@ struct UsageEntry: Codable {
     let version: String?
     let message: MessageUsage
     let costUSD: Double?
+    let requestId: String?
     
     private enum CodingKeys: String, CodingKey {
-        case timestamp, version, message, costUSD
+        case timestamp, version, message, costUSD, requestId
     }
     
     init(from decoder: Decoder) throws {
@@ -544,12 +632,14 @@ struct UsageEntry: Codable {
         self.version = try container.decodeIfPresent(String.self, forKey: .version)
         self.message = try container.decode(MessageUsage.self, forKey: .message)
         self.costUSD = try container.decodeIfPresent(Double.self, forKey: .costUSD)
+        self.requestId = try container.decodeIfPresent(String.self, forKey: .requestId)
     }
 }
 
 struct MessageUsage: Codable {
     let usage: TokenUsage
     let model: String?
+    let id: String?
 }
 
 struct TokenUsage: Codable {
@@ -688,18 +778,22 @@ extension UsageManager {
             UltraFastManager.shared.cacheFileList(jsonlFiles)
         }
         
-        // Try to get cached pricing (instant)
-        var modelPricing: [String: ModelPricing]
-        if let cachedPricing = await UltraFastManager.shared.getCachedPricing() {
-            modelPricing = cachedPricing
-            print("   💰 Pricing from memory cache (instant)")
+        // Try to get cached pricing (instant) - skip if display mode
+        var modelPricing: [String: ModelPricing] = [:]
+        if costMode != .display {
+            if let cachedPricing = await UltraFastManager.shared.getCachedPricing() {
+                modelPricing = cachedPricing
+                print("   💰 Pricing from memory cache (instant)")
+            } else {
+                // Fall back to fetching and cache it
+                let pricingStart = Date()
+                modelPricing = try await PricingFetcher.shared.fetchModelPricing()
+                let pricingTime = Date().timeIntervalSince(pricingStart)
+                print("   💰 Pricing fetch: \(String(format: "%.3f", pricingTime))s")
+                UltraFastManager.shared.cachePricing(modelPricing)
+            }
         } else {
-            // Fall back to fetching and cache it
-            let pricingStart = Date()
-            modelPricing = try await PricingFetcher.shared.fetchModelPricing()
-            let pricingTime = Date().timeIntervalSince(pricingStart)
-            print("   💰 Pricing fetch: \(String(format: "%.3f", pricingTime))s")
-            UltraFastManager.shared.cachePricing(modelPricing)
+            print("   💰 Pricing skipped (display mode)")
         }
         
         // Get today and month dates

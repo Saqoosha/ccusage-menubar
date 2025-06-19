@@ -14,6 +14,15 @@ struct UltraCachedEntry: Codable {
     let cacheReadTokens: Int
     let costUSD: Double?
     let model: String?
+    // Add deduplication fields
+    let messageId: String?
+    let requestId: String?
+    
+    // Computed property for deduplication hash
+    var deduplicationHash: String? {
+        guard let messageId = messageId, let requestId = requestId else { return nil }
+        return "\(messageId):\(requestId)"
+    }
 }
 
 // Ultra-fast two-level cache manager
